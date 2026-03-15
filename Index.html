@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NanoBoy 3D - Edição PC</title>
+  
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://unpkg.com/nostalgist/dist/nostalgist.umd.js"></script>
+
+  <script>
+    // Componente da TV (Puxa a imagem do emulador para o 3D)
+    AFRAME.registerComponent('tv-screen', {
+      init: function () { 
+        this.textureSet = false; 
+        this.videoTexture = null;
+      },
+      tick: function () {
+        const canvas = document.getElementById('game-canvas');
+        if (canvas && !this.textureSet) {
+          const mesh = this.el.getObject3D('mesh');
+          this.videoTexture = new THREE.CanvasTexture(canvas);
+          this.videoTexture.magFilter = THREE.NearestFilter;
+          this.videoTexture.minFilter = THREE.NearestFilter;
+          mesh.material.map = this.videoTexture;
+          mesh.material.needsUpdate = true;
+          this.textureSet = true;
+        }
+        if (this.textureSet && this.videoTexture) {
+          this.videoTexture.needsUpdate = true;
+        }
+      }
+    });
+  </script>
+
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #000; }
+    #menu-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 10, 10, 0.95); color: #00FF00; z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      font-family: 'Courier New', monospace; text-align: center; padding: 20px; box-sizing: border-box;
+    }
+    .btn-pc {
+      background: #000; color: #00FF00; padding: 15px 40px; border: 2px solid #00FF00;
+      border-radius: 5px; font-size: 20px; cursor: pointer;
+      width: 100%; max-width: 400px; font-weight: bold; margin-bottom: 20px;
+      transition: 0.3s;
+    }
+    .btn-pc:hover { background: #00FF00; color: #000; }
+    #folder-input { display: none; }
+    .instrucoes { color: #ccc; font-size: 16px; margin-bottom: 30px; max-width: 500px; line-height: 1.6; }
+    kbd { background: #333; padding: 2px 6px; border-radius: 4px; color: #fff; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+  <div id="menu-overlay">
+    <h1 style="font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 10px #00FF00;">🖥️ NANOBOY 3D DESKTOP</h1>
+    
+    <div class="instrucoes">
+      <p><b>Como jogar:</b></p>
+      <p>1. Selecione a pasta com os seus jogos no PC.</p>
+      <p>2. Clique e arraste o mouse para olhar ao redor.</p>
+      <p>3. Clique com o botão esquerdo para interagir.</p>
+      <p>Use o teclado nativo ou um controle USB/Bluetooth!</p>
+    </div>
+
+    <label for="folder-input" class="btn-pc" id="label-arquivo">
+      📁 Selecionar Pasta de Jogos
+    </label>
+    <input type="file" id="folder-input" webkitdirectory directory multiple>
+    
+    <div id="status" style="color: #00FF00; font-weight: bold; margin-top: 20px;"></div>
+  </div>
+
+  <a-scene loading-screen="enabled: false">
+    
+    <a-sky color="#050505"></a-sky>
+    <a-grid id="chao" width="50" height="50" src="" color="#111" material="shader: flat"></a-grid>
+
+    <a-entity id="grupo-estacao" position="0 0 -2" rotation="0 0 0">
+      
+      <a-entity id="estacao-tela" position="0 1.5 0">
+        <a-plane color="#00FFFF" width="1.64" height="1.24" position="0 0 -0.01" material="shader: flat"></a-plane>
+        <a-plane color="#111" position="0 0 0" width="1.6" height="1.2" material="shader: flat"></a-plane>
+        <a-plane id="tela-jogo" position="0 0 0.01" width="1.6" height="1.2" material="color: #000; shader: flat; transparent: true; opacity: 1;"></a-plane>
+        
+        <a-text id="tv-status" value="ESCOLHA UM CONSOLE" color="#00FF00" position="-0.7 -0.8 0.05" scale="0.5 0.5 0.5"></a-text>
+
+        <a-entity position="0 -0.8 0.05">
+          <a-plane class="interativo btn-save" color="#00FF00" position="-0.5 0 0" width="0.4" height="0.15" material="transparent: true; opacity: 0.8; shader: flat"><a-text value="SALVAR" align="center" position="0 0 0.02" scale="0.3 0.3 0.3" color="#000"></a-text></a-plane>
+          <a-plane class="interativo btn-load" color="#00FFFF" position="0 0 0" width="0.4" height="0.15" material="transparent: true; opacity: 0.8; shader: flat"><a-text value="CARREGAR" align="center" position="0 0 0.02" scale="0.3 0.3 0.3" color="#000"></a-text></a-plane>
+          <a-plane class="interativo btn-power" color="#F44336" position="0.5 0 0" width="0.4" height="0.15" material="transparent: true; opacity: 0.8; shader: flat"><a-text value="DESLIGAR" align="center" position="0 0 0.02" scale="0.3 0.3 0.3" color="#FFF"></a-text></a-plane>
+        </a-entity>
+      </a-entity>
+
+      <a-entity id="estacao-prateleira" position="2.5 0.5 0" rotation="0 -25 0">
+        <a-plane material="color: rgba(20,20,20,0.9); side: double;" position="0 0.5 0" width="2" height="0.05" depth="0.8"></a-plane> 
+        <a-plane material="color: rgba(20,20,20,0.9); side: double;" position="0 1.2 0" width="2" height="0.05" depth="0.8"></a-plane> 
+        <a-plane material="color: rgba(20,20,20,0.9); side: double;" position="-0.95 0.85 0" width="0.05" height="1.5" depth="0.8"></a-plane> 
+        <a-plane material="color: rgba(20,20,20,0.9); side: double;" position="0.95 0.85 0" width="0.05" height="1.5" depth="0.8"></a-plane> 
+
+        <a-entity position="0 0.85 0"><a-box color="#FF00FF" width="2.02" height="1.52" depth="0.82" material="wireframe: true; wireframeLinewidth: 2; shader: flat"></a-box></a-entity>
+
+        <a-box class="interativo console" data-core="snes" data-nome="Super Nintendo" color="#9E9E9E" position="-0.6 0.65 0" width="0.4" height="0.1" depth="0.4"><a-text value="SNES" align="center" position="0 0.06 0.1" rotation="-90 0 0" scale="0.3 0.3 0.3" color="#000"></a-text></a-box>
+        <a-box class="interativo console" data-core="nes" data-nome="Nintendinho" color="#EEEEEE" position="-0.1 0.65 0" width="0.4" height="0.15" depth="0.35"><a-text value="NES" align="center" position="0 0.08 0.1" rotation="-90 0 0" scale="0.3 0.3 0.3" color="#F00"></a-text></a-box>
+        <a-box class="interativo console" data-core="n64" data-nome="Nintendo 64" color="#212121" position="0.4 0.65 0" width="0.4" height="0.12" depth="0.4"><a-text value="N64" align="center" position="0 0.07 0.1" rotation="-90 0 0" scale="0.3 0.3 0.3" color="#FFEB3B"></a-text></a-box>
+        <a-box class="interativo console" data-core="megadrive" data-nome="Mega Drive" color="#000000" position="-0.6 0.8 0" width="0.4" height="0.08" depth="0.4"><a-text value="SEGA" align="center" position="0 0.05 0.1" rotation="-90 0 0" scale="0.3 0.3 0.3" color="#FFF"></a-text></a-box>
+        <a-box class="interativo console" data-core="gba" data-nome="Game Boy Adv" color="#3F51B5" position="-0.1 0.8 0" width="0.3" height="0.05" depth="0.2"><a-text value="GBA" align="center" position="0 0.03 0.05" rotation="-90 0 0" scale="0.2 0.2 0.2" color="#FFF"></a-text></a-box>
+
+        <a-entity id="cartuchos-container" position="-0.8 1.35 0"></a-entity>
+      </a-entity>
+    </a-entity>
+
+    <a-camera position="0 1.5 1" look-controls="pointerLockEnabled: false">
+      <a-cursor raycaster="objects: .interativo" color="#00FF00" scale="0.8 0.8 0.8" 
+                animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 100; from: 0.2 0.2 0.2; to: 0.8 0.8 0.8">
+      </a-cursor>
+    </a-camera>
+  </a-scene>
+
+  <script>
+    const folderInput = document.getElementById('folder-input');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const containerCartuchos = document.getElementById('cartuchos-container');
+    const tvStatus = document.getElementById('tv-status');
+    const cenaVR = document.querySelector('a-scene');
+    
+    let consoleAtivo = null; 
+    let arquivosRom = []; 
+    let emuladorRodando = null;
+    let nomeJogoAtual = "";
+
+    // Quando seleciona a pasta no PC
+    folderInput.addEventListener('change', (evento) => {
+      const arquivos = evento.target.files;
+      if (arquivos.length === 0) return;
+
+      document.getElementById('status').innerHTML = "Carregando ambiente 3D...";
+
+      let cartuchosCriados = 0; let posX = 0; let posY = 0; let posZ = 0;
+      const formatos = { 'nes': '#BDBDBD', 'sfc': '#757575', 'smc': '#757575', 'n64': '#424242', 'z64': '#424242', 'md': '#000000', 'gen': '#000000', 'gba': '#2196F3' };
+
+      for (let i = 0; i < arquivos.length; i++) {
+        const arquivo = arquivos[i];
+        const extensao = arquivo.name.split('.').pop().toLowerCase();
+
+        if (formatos[extensao]) {
+          arquivosRom.push(arquivo);
+          const cartucho = document.createElement('a-box');
+          cartucho.setAttribute('class', 'interativo cartucho');
+          cartucho.setAttribute('data-index', arquivosRom.length - 1);
+          cartucho.setAttribute('color', formatos[extensao]);
+          cartucho.setAttribute('width', '0.2');
+          cartucho.setAttribute('height', '0.25');
+          cartucho.setAttribute('depth', '0.05');
+          cartucho.setAttribute('position', `${posX} ${posY} ${posZ}`);
+          
+          const rotulo = document.createElement('a-text');
+          rotulo.setAttribute('value', arquivo.name.substring(0, 15));
+          rotulo.setAttribute('color', '#FFF');
+          rotulo.setAttribute('scale', '0.2 0.2 0.2');
+          rotulo.setAttribute('position', '0 0 0.03');
+          rotulo.setAttribute('align', 'center');
+          cartucho.appendChild(rotulo);
+          containerCartuchos.appendChild(cartucho);
+
+          posX += 0.25;
+          cartuchosCriados++;
+          if (cartuchosCriados % 6 === 0) { posX = 0; posZ += 0.15; }
+        }
+      }
+      
+      // Fecha o menu direto para o 3D, sem pedir câmera ou VR
+      setTimeout(() => {
+        menuOverlay.style.display = 'none';
+        iniciarInteracoes3D();
+      }, 500);
+    });
+
+    // Banco de Dados Local (IndexedDB do PC)
+    function initDB() { return new Promise((res, rej) => { const req = indexedDB.open("NanoBoyPC_Saves", 1); req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains('states')) e.target.result.createObjectStore('states'); }; req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); }
+    async function salvarNoBanco(nome, data) { const db = await initDB(); return new Promise((res) => { const tx = db.transaction('states', 'readwrite'); tx.objectStore('states').put(data, nome); tx.oncomplete = res; }); }
+    async function carregarDoBanco(nome) { const db = await initDB(); return new Promise((res) => { const tx = db.transaction('states', 'readonly'); const req = tx.objectStore('states').get(nome); req.onsuccess = () => res(req.result); req.onerror = () => res(null); }); }
+
+    function iniciarInteracoes3D() {
+      const itens = document.querySelectorAll('.interativo');
+      
+      itens.forEach(item => {
+        item.addEventListener('click', function () {
+          
+          if (this.classList.contains('btn-power')) {
+            if (emuladorRodando) {
+              emuladorRodando.exit();
+              emuladorRodando = null;
+              document.querySelectorAll('#game-canvas').forEach(c => c.remove());
+              document.querySelectorAll('#video-stream').forEach(v => v.remove());
+              const malha3D = document.getElementById('tela-jogo').getObject3D('mesh');
+              if (malha3D) { malha3D.material.map = null; malha3D.material.color.setHex(0x000000); malha3D.material.needsUpdate = true; }
+              tvStatus.setAttribute('value', 'CONSOLE DESLIGADO');
+              tvStatus.setAttribute('color', '#F44336');
+            }
+            return;
+          }
+
+          if (this.classList.contains('console')) {
+            consoleAtivo = this.getAttribute('data-core');
+            const nomeConsole = this.getAttribute('data-nome');
+            document.querySelectorAll('.console').forEach(c => {
+              const p = c.getAttribute('position');
+              const origY = c.getAttribute('data-y') || (c.getAttribute('position').y > 0.7 ? 0.8 : 0.65);
+              c.setAttribute('position', `${p.x} ${origY} ${p.z}`);
+            });
+            const myP = this.getAttribute('position');
+            this.setAttribute('position', `${myP.x} ${myP.y + 0.05} ${myP.z}`);
+            tvStatus.setAttribute('value', `CONSOLE: ${nomeConsole.toUpperCase()}\nESCOLHA O CARTUCHO`);
+            tvStatus.setAttribute('color', '#00FFFF');
+          }
+
+          if (this.classList.contains('cartucho')) {
+            if (!consoleAtivo) {
+              tvStatus.setAttribute('value', 'ERRO: LIGUE UM CONSOLE');
+              tvStatus.setAttribute('color', '#FF0000');
+              return;
+            }
+            const arquivoId = this.getAttribute('data-index');
+            const arquivoFisico = arquivosRom[arquivoId];
+            nomeJogoAtual = arquivoFisico.name; 
+            document.querySelectorAll('.cartucho').forEach(c => {
+              const p = c.getAttribute('position');
+              c.setAttribute('position', `${p.x} 0 ${p.z}`);
+            });
+            const myP = this.getAttribute('position');
+            this.setAttribute('position', `${myP.x} 0.1 ${myP.z}`);
+            carregarJogo(consoleAtivo, arquivoFisico);
+          }
+
+          if (this.classList.contains('btn-save')) {
+            if (!emuladorRodando || !nomeJogoAtual) return;
+            tvStatus.setAttribute('value', 'SALVANDO...');
+            tvStatus.setAttribute('color', '#FFEB3B');
+            emuladorRodando.saveState().then(({ state }) => {
+              salvarNoBanco(nomeJogoAtual, state).then(() => {
+                tvStatus.setAttribute('value', 'JOGO SALVO!');
+                tvStatus.setAttribute('color', '#4CAF50');
+                setTimeout(() => tvStatus.setAttribute('value', ''), 2000);
+              });
+            });
+          }
+
+          if (this.classList.contains('btn-load')) {
+            if (!emuladorRodando || !nomeJogoAtual) return;
+            tvStatus.setAttribute('value', 'CARREGANDO...');
+            tvStatus.setAttribute('color', '#FFEB3B');
+            carregarDoBanco(nomeJogoAtual).then(state => {
+              if (state) {
+                emuladorRodando.loadState(state).then(() => {
+                  tvStatus.setAttribute('value', 'SAVE CARREGADO!');
+                  tvStatus.setAttribute('color', '#4CAF50');
+                  setTimeout(() => tvStatus.setAttribute('value', ''), 2000);
+                });
+              } else {
+                tvStatus.setAttribute('value', 'NENHUM SAVE ENCONTRADO');
+                tvStatus.setAttribute('color', '#F44336');
+                setTimeout(() => tvStatus.setAttribute('value', ''), 2000);
+              }
+            });
+          }
+        });
+      });
+    }
+
+    async function carregarJogo(sistemaCore, arquivo) {
+      tvStatus.setAttribute('value', `LENDO CARTUCHO...\nAGUARDE!`);
+      tvStatus.setAttribute('color', '#FFEB3B');
+
+      try {
+        if (emuladorRodando) {
+          emuladorRodando.exit();
+          document.querySelectorAll('#game-canvas').forEach(c => c.remove());
+          document.querySelectorAll('#video-stream').forEach(v => v.remove());
+        }
+
+        const nucleosExatos = { 'snes': 'snes9x', 'nes': 'fceumm', 'n64': 'mupen64plus_next', 'megadrive': 'genesis_plus_gx', 'gba': 'vba_next' };
+        const nucleoCorreto = nucleosExatos[sistemaCore];
+        const urlDaRom = URL.createObjectURL(arquivo);
+
+        emuladorRodando = await Nostalgist.launch({
+          core: nucleoCorreto,
+          rom: urlDaRom
+        });
+
+        const canvasDoJogo = emuladorRodando.getCanvas();
+        canvasDoJogo.id = 'game-canvas';
+        canvasDoJogo.style.position = 'absolute';
+        canvasDoJogo.style.left = '-9999px';
+        document.body.appendChild(canvasDoJogo);
+
+        const streamDeVideo = canvasDoJogo.captureStream(60);
+        const playerDeVideo = document.createElement('video');
+        playerDeVideo.id = 'video-stream';
+        playerDeVideo.srcObject = streamDeVideo;
+        playerDeVideo.autoplay = true;
+        playerDeVideo.muted = true;
+        playerDeVideo.playsInline = true;
+        playerDeVideo.style.display = 'none';
+        document.body.appendChild(playerDeVideo);
+
+        playerDeVideo.onplaying = () => {
+          const telaVR = document.getElementById('tela-jogo');
+          const malha3D = telaVR.getObject3D('mesh');
+          const texturaDeVideo = new THREE.VideoTexture(playerDeVideo);
+          texturaDeVideo.magFilter = THREE.NearestFilter;
+          texturaDeVideo.minFilter = THREE.NearestFilter;
+          malha3D.material.map = texturaDeVideo;
+          malha3D.material.color.setHex(0xffffff);
+          malha3D.material.needsUpdate = true;
+          tvStatus.setAttribute('value', ''); 
+        };
+        playerDeVideo.play();
+
+      } catch (erro) {
+        console.error(erro);
+        tvStatus.setAttribute('value', `FALHA. TENTE DESLIGAR.`);
+        tvStatus.setAttribute('color', '#F44336');
+      }
+    }
+  </script>
+</body>
+</html>
